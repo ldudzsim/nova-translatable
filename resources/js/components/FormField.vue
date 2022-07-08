@@ -33,7 +33,7 @@
                 :placeholder="field.name"
                 :disabled="isReadonly"
                 v-model="value[currentLocale]"
-                v-if="!field.singleLine && !field.trix"
+                v-if="!field.singleLine && !field.trix && !field.markdown"
                 @keydown.tab="handleTab"
             ></textarea>
 
@@ -44,6 +44,18 @@
                     :value="value[currentLocale]"
                     placeholder=""
                     @change="handleChange"
+                />
+            </div>
+
+            <div v-if="!field.singleField && field.markdown" @keydown.stop class="mt-4">
+                <textarea
+                    ref="MarkdownArea"
+                    class="w-full form-control form-input form-input-bordered"
+
+                    :id="field.name"
+                    :class="errorClasses"
+                    :placeholder="field.name"
+                    :value="value[currentLocale]"
                 />
             </div>
 
@@ -73,8 +85,10 @@
 <script>
 
 import Trix from '../Trix'
-
+import easyMDE from "easymde";
 import { FormField, HandlesValidationErrors } from 'laravel-nova'
+
+require("easymde/dist/easymde.min.css");
 
 export default {
     mixins: [FormField, HandlesValidationErrors],
@@ -87,6 +101,21 @@ export default {
         return {
             locales: Object.keys(this.field.locales),
             currentLocale: this.field.currentLocale,
+        }
+    },
+
+    mounted() {
+        if (!this.field.singleField && this.field.markdown) {
+            this.$refs.MarkdownArea.value = this.field.value[this.field.currentLocale];
+            this.easymde = new easyMDE({
+                element: this.$refs.MarkdownArea,
+                spellChecker: false,
+                hideIcons: ["image"],
+                showIcons: ["table"],
+            });
+            this.easymde.codemirror.on("change", (cm, changeObj) => {
+                this.value[this.currentLocale] = this.easymde.value();
+            });
         }
     },
 
@@ -119,6 +148,8 @@ export default {
             this.$nextTick(() => {
                 if (this.field.trix) {
                     this.$refs.field.update()
+                } else if (this.field.markdown) {
+                    this.easymde.value(this.field.value[this.currentLocale] || "");
                 } else {
                     this.$refs.field.focus()
                 }
