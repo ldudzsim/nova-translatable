@@ -106,7 +106,7 @@ export default {
 
     mounted() {
         if (!this.field.singleField && this.field.markdown) {
-            this.$refs.MarkdownArea.value = this.field.value[this.field.currentLocale];
+            this.$refs.MarkdownArea.value =(this.field.value || {})[this.field.currentLocale] || "";
             this.easymde = new easyMDE({
                 element: this.$refs.MarkdownArea,
                 spellChecker: false,
@@ -149,7 +149,7 @@ export default {
                 if (this.field.trix) {
                     this.$refs.field.update()
                 } else if (this.field.markdown) {
-                    this.easymde.value(this.field.value[this.currentLocale] || "");
+                    this.easymde.value((this.field.value || {})[this.currentLocale] || "");
                 } else {
                     this.$refs.field.focus()
                 }
